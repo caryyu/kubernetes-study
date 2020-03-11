@@ -77,7 +77,7 @@ ansible-playbook playbook-master.yaml --inventory hosts
 安装完毕之后，就可以利用 curl 或者 kubectl 查看 API 的信息了
 
 ```shell
-kubectl --token="7db2f1c02d721320" --server=https://192.168.99.107:6443 --insecure-skip-tls-verify=true
+kubectl --token="7db2f1c02d721320" --server=https://192.168.99.107:6443 --insecure-skip-tls-verify=true cluster-info
 ```
 
 更精简的方法就是把 `KUBECONFIG` 导入到全局使用
