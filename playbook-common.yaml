@@ -1,0 +1,58 @@
+- name: "common-component-setup"
+  hosts: all
+  connection: smart
+  gather_facts: no
+
+  pre_tasks:
+  - name: "profile setup"
+    raw: |-
+      cat > /tmp/setenv.sh <<EOF
+      export V_NAME=`hostname`
+      export V_HOST=`ifconfig eth1 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}'`
+      EOF
+      sudo mv /tmp/setenv.sh /etc/profile.d/
+
+  tasks:
+  - name: "etcd setup"
+    raw: |-
+      . /etc/profile.d/setenv.sh
+
+      sudo system-docker stop etcd || true
+      sudo system-docker rm   etcd || true
+      sudo system-docker run --name=etcd -d --restart=always --net=host \
+      --entrypoint="etcd" \
+      quay-mirror.qiniu.com/coreos/etcd:v3.2 \
+      -name=$V_NAME \
+      -initial-advertise-peer-urls=http://$V_HOST:2380 \
+      -listen-peer-urls=http://0.0.0.0:2380 \
+      -listen-client-urls=http://0.0.0.0:2379 \
+      -advertise-client-urls=http://$V_HOST:2379 \
+      -initial-cluster-token=etcd-cluster-1 \
+      -initial-cluster={{etcd_all_urls}} \
+      -initial-cluster-state=new
+  
+  - name: "flannel config"
+    raw: |-
+      sleep 3 # etcd should finish in 3 minutes
+      sudo system-docker exec etcd etcdctl \
+      set /coreos.com/network/config "{\"Network\":\"{{flannel_network}}\",\"Backend\":{\"Type\":\"vxlan\"}}"
+
+  - name: "flannel setup"
+    raw: |-
+      . /etc/profile.d/setenv.sh
+
+      sudo system-docker stop flannel || true
+      sudo system-docker rm   flannel || true
+      sudo system-docker run --name=flannel -d --restart=always --net=host \
+      --volumes-from=system-volumes \
+      -e FLANNELD_ETCD_ENDPOINTS=http://$V_HOST:2379 --privileged \
+      quay-mirror.qiniu.com/coreos/flannel:v0.11.0 --iface=eth1
+
+  - name: "docker daemon setup"
+    raw: |-
+      sleep 3 # flannel should finish in 3 minutes
+
+      . /var/run/flannel/subnet.env
+      sudo ros config set rancher.docker.bip $FLANNEL_SUBNET
+      sudo ros config set rancher.docker.extra_args ["--mtu",$FLANNEL_MTU]
+      sudo ros s restart docker

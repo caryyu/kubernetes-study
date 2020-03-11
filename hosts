@@ -1,0 +1,7 @@
+[masters]
+192.168.99.107 ansible_connection=smart ansible_user=docker ansible_ssh_private_key_file=/Users/caryyu/.docker/machine/machines/master-1/id_rsa
+
+[workers]
+192.168.99.108 ansible_connection=smart ansible_user=docker ansible_ssh_private_key_file=/Users/caryyu/.docker/machine/machines/node-1/id_rsa
+192.168.99.109 ansible_connection=smart ansible_user=docker ansible_ssh_private_key_file=/Users/caryyu/.docker/machine/machines/node-2/id_rsa
+192.168.99.110 ansible_connection=smart ansible_user=docker ansible_ssh_private_key_file=/Users/caryyu/.docker/machine/machines/node-3/id_rsa

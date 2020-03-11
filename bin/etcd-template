@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+import yaml, subprocess, re, os
+
+def template(node, nodes):
+    process = subprocess.run('''
+    cat > /tmp/docker-compose-{node}.yaml <<EOF
+    version: '3.7'
+    services:
+      etcd:
+        image: quay-mirror.qiniu.com/coreos/etcd:v3.2
+        ports:
+        - "2379:2379"
+        - "2380:2380"
+        - "4001:4001"
+        - "7001:7001"
+        entrypoint: etcd
+        command: |
+          -name={node}
+          -initial-advertise-peer-urls=http://{host}:2380
+          -listen-peer-urls=http://0.0.0.0:2380
+          -listen-client-urls=http://0.0.0.0:2379
+          -advertise-client-urls=http://{host}:2379
+          -initial-cluster-token=etcd-cluster-1
+          -initial-cluster={urls}
+          -initial-cluster-state=new
+      flannel:
+        image: quay-mirror.qiniu.com/coreos/flannel:v0.11.0
+        privileged: true
+        network_mode: host
+        environment:
+        - "FLANNELD_ETCD_ENDPOINTS=http://{host}:2379"
+
+    '''.format(node=node["node"],host=node["host"],urls=parse_urlString(nodes)), 
+    shell=True, check=True, stdout=subprocess.PIPE, universal_newlines=True)
+
+def parse_urlString(nodes):
+    urls = []
+    for item in nodes:
+        urls.append("{0}=http://{1}:2380".format(item["node"], item["host"]))
+    urlString = ",".join(urls)
+    return urlString
+
+def parse_all(items):
+    hosts = []
+    for item in items:
+        if not item:
+            continue
+        info = parse_node_info(item)
+        hosts.append(info)
+    return hosts
+
+def parse_node_info(item):
+    info = item.split(" ")
+    node = info[0]
+    host = info[1]
+    return {"node": node, "host": host}
+
+if __name__ == "__main__":
+    process = subprocess.run('''
+        docker-machine ls | grep 'tcp' | awk '{sub("tcp://","",$5);sub(":2376","",$5);print $1,$5}'
+        ''', shell=True, check=True, stdout=subprocess.PIPE, universal_newlines=True)
+    items = process.stdout.split("\n")
+    nodes = parse_all(items)
+    for node in nodes:
+        template(node, nodes)

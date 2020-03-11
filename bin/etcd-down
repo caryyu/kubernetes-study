@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+eval "$(docker-machine env master-1)"
+docker-compose -f /tmp/docker-compose-master-1.yaml down
+
+eval "$(docker-machine env node-1)"
+docker-compose -f /tmp/docker-compose-node-1.yaml down
+
+eval "$(docker-machine env node-2)"
+docker-compose -f /tmp/docker-compose-node-2.yaml down
+
+eval "$(docker-machine env node-3)"
+docker-compose -f /tmp/docker-compose-node-3.yaml down

@@ -1,0 +1,23 @@
+# - name: "registry mirror setup"
+#   hosts: all
+#   connection: smart
+#   gather_facts: no
+#   tasks:
+#   - raw: |-
+#       sudo tee /etc/docker/daemon.json <<-'EOF'
+#       {
+#         "registry-mirrors": ["{{mirror}}"]
+#       }
+#       EOF
+#       sudo ros service restart docker
+# - name: "common-component-cleanup"
+#   hosts: all
+#   connection: smart
+#   gather_facts: no
+#   tasks:
+#   - name: "cleanup"
+#     raw: |-
+#       sudo system-docker stop flannel
+#       sudo system-docker rm   flannel
+#       sudo system-docker stop etcd
+#       sudo system-docker rm   etcd

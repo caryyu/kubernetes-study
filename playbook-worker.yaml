@@ -1,0 +1,25 @@
+- name: "master-component-setup"
+  hosts: workers
+  connection: smart
+  gather_facts: no
+
+  pre_tasks:
+  - name: "profile setup"
+    raw: |-
+      cat > /tmp/setenv.sh <<EOF
+      export V_NAME=`hostname`
+      export V_HOST=`ifconfig eth1 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}'`
+      EOF
+      sudo mv /tmp/setenv.sh /etc/profile.d/
+
+  tasks:
+  - name: "kube-proxy setup"
+    raw: |-
+      sudo system-docker stop kube-proxy || true
+      sudo system-docker rm   kube-proxy || true
+      # sudo system-docker run --name=kube-proxy -d --restart=always \
+      #   --net=host \
+      #   --volumes-from=system-volumes \
+      #   --entrypoint="kube-proxy" \
+      #   gcr.azk8s.cn/google-containers/kube-proxy:v1.13.0 \
+      #   --etcd_servers=http://127.0.0.1:2379
