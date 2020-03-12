@@ -82,14 +82,18 @@ kubectl --token="7db2f1c02d721320" --server=https://192.168.99.107:6443 --insecu
 
 更精简的方法就是把 `KUBECONFIG` 导入到全局使用
 
-```
-export KUBECONFIG
+```shell
+export KUBECONFIG=KUBECONFIG
 kubectl cluster-info
 ```
 
 # 安装 Worker 组件
 
-TBD
+```shell
+ansible-playbook playbook-worker.yaml --inventory hosts
+
+kubectl get nodes
+```
 
 # 其它内容
 

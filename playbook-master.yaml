@@ -23,7 +23,8 @@
     raw: |-
       . /etc/profile.d/setenv.sh
 
-      echo "7db2f1c02d721320,kubeadm-node-csr,0615e0ac-7d70-11e7-ad94-fa163eb9dfdd,system:kubelet-bootstrap" \
+      echo \
+      "7db2f1c02d721320,kubeadm-node-csr,0615e0ac-7d70-11e7-ad94-fa163eb9dfdd,system:kubelet-bootstrap" \
       > /etc/docker/kube-apiserver/tokens.csv
 
       sudo system-docker stop kube-apiserver || true
@@ -32,7 +33,7 @@
         --net=host \
         --volumes-from=system-volumes \
         --entrypoint="kube-apiserver" \
-        gcr.azk8s.cn/google-containers/kube-apiserver:v1.13.0 \
+        gcr.azk8s.cn/google-containers/kube-apiserver:v1.14.0 \
             --etcd-servers=http://127.0.0.1:2379 \
             --anonymous-auth=false \
             --advertise-address=${V_HOST} \
@@ -46,7 +47,7 @@
         --net=host \
         --volumes-from=system-volumes \
         --entrypoint="kube-controller-manager" \
-        gcr.azk8s.cn/google-containers/kube-controller-manager:v1.13.0 \
+        gcr.azk8s.cn/google-containers/kube-controller-manager:v1.14.0 \
         --master=127.0.0.1:8080
 
   - name: "kube-scheduler setup"
@@ -57,7 +58,7 @@
         --net=host \
         --volumes-from=system-volumes \
         --entrypoint="kube-scheduler" \
-        gcr.azk8s.cn/google-containers/kube-scheduler:v1.13.0 \
+        gcr.azk8s.cn/google-containers/kube-scheduler:v1.14.0 \
         --master=127.0.0.1:8080
 
   

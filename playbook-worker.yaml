@@ -10,16 +10,61 @@
       export V_NAME=`hostname`
       export V_HOST=`ifconfig eth1 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}'`
       EOF
-      sudo mv /tmp/setenv.sh /etc/profile.d/
+      sudo mv /tmp/setenv.sh /etc/profile.d/    
 
   tasks:
+  - name: "prepare kubeconfig"
+    raw: |-
+      sudo mkdir -p /etc/docker/kubernetes
+
+      cat > /tmp/KUBECONFIG <<EOF
+      current-context: kubernetes
+      apiVersion: v1
+      clusters:
+      - cluster:
+          insecure-skip-tls-verify: true
+          server: https://192.168.99.107:6443
+        name: kubernetes-cluster
+      contexts:
+      - context:
+          cluster: kubernetes-cluster
+          user: token-user
+        name: kubernetes
+      users:
+      - name: token-user
+        user:
+          token: 7db2f1c02d721320
+      EOF
+      
+      sudo mv /tmp/KUBECONFIG /etc/docker/kubernetes
+      
   - name: "kube-proxy setup"
     raw: |-
+      . /etc/profile.d/setenv.sh
+
       sudo system-docker stop kube-proxy || true
       sudo system-docker rm   kube-proxy || true
-      # sudo system-docker run --name=kube-proxy -d --restart=always \
-      #   --net=host \
+      sudo system-docker run --name=kube-proxy -d --restart=always \
+        --net=host --privileged \
+        --volumes-from=system-volumes \
+        --entrypoint="kube-proxy" \
+        gcr.azk8s.cn/google-containers/kube-proxy:v1.14.0 \
+        --kubeconfig=/etc/docker/kubernetes/KUBECONFIG \
+        --proxy-mode=iptables \
+        --bind-address=${V_HOST} \
+        --cluster-cidr=172.16.0.1/16 
+
+  - name: "kubelet setup"
+    raw: |-
+      . /etc/profile.d/setenv.sh
+
+      sudo system-docker stop kubelet || true
+      sudo system-docker rm   kubelet || true
+      # sudo system-docker run --name=kubelet -d --restart=always \
+      #   --net=host --privileged \
       #   --volumes-from=system-volumes \
-      #   --entrypoint="kube-proxy" \
-      #   gcr.azk8s.cn/google-containers/kube-proxy:v1.13.0 \
-      #   --etcd_servers=http://127.0.0.1:2379
+      #   --entrypoint="kubelet" \
+      #   gcr.azk8s.cn/google-containers/hyperkube:v1.14.0 \
+      #   --kubeconfig=/etc/docker/kubernetes/KUBECONFIG \
+      #   --node-ip=${V_HOST} \
+      #   --pod-cidr=10.0.0.1/16
