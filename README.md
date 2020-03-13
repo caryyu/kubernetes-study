@@ -1,7 +1,6 @@
 此篇文档是个人学习如何在 MacOS 电脑上搭建一个完整的 Kubebernetes 集群，主要利用 RancherOS with Docker Machine 的方式进行。
 
-**目前状态**：简单完成了 Master 的安装，还没有弄 Worker...
-
+**目前状态(未完成)**：Kubelet 最终依然无法找到办法在容器环境中良好启动，果断放弃，使用方案二进行实验。
 
 - [预备知识](#%e9%a2%84%e5%a4%87%e7%9f%a5%e8%af%86)
 - [虚拟机预装](#%e8%99%9a%e6%8b%9f%e6%9c%ba%e9%a2%84%e8%a3%85)
@@ -10,6 +9,7 @@
 - [安装 Master 组件](#%e5%ae%89%e8%a3%85-master-%e7%bb%84%e4%bb%b6)
 - [安装 Worker 组件](#%e5%ae%89%e8%a3%85-worker-%e7%bb%84%e4%bb%b6)
 - [其它内容](#%e5%85%b6%e5%ae%83%e5%86%85%e5%ae%b9)
+- [镜像列表](#%e9%95%9c%e5%83%8f%e5%88%97%e8%a1%a8)
 - [Reference](#reference)
 
 # 预备知识
@@ -71,7 +71,8 @@ ansible-playbook playbook-common.yaml --inventory hosts --extra-vars "etcd_all_u
 安装 Master 服务(kube-apiserver/kube-controller/kube-scheduler)
 
 ```shell
-ansible-playbook playbook-master.yaml --inventory hosts
+ansible-playbook playbook-master.yaml --inventory hosts \
+--extra-vars "version=v1.14.8"
 ```
 
 安装完毕之后，就可以利用 curl 或者 kubectl 查看 API 的信息了
@@ -90,10 +91,13 @@ kubectl cluster-info
 # 安装 Worker 组件
 
 ```shell
-ansible-playbook playbook-worker.yaml --inventory hosts
+ansible-playbook playbook-worker.yaml --inventory hosts \
+--extra-vars "version=v1.14.8"
 
 kubectl get nodes
 ```
+
+> Kubelet 最终依然无法找到办法在容器环境中良好启动，果断放弃，使用方案二进行实验。
 
 # 其它内容
 
@@ -103,6 +107,18 @@ kubectl get nodes
 ansible-playbook playbook-other.yaml --inventory hosts \
 --extra-vars "mirror=<Registry Mirror>"
 ```
+
+# 镜像列表
+
+地址 `gcr.azk8s.cn` 主要用来加速 `gcr.io` 国内访问
+
+独立镜像 | All-in-One | Entrypoint
+--- | --- | ---
+gcr.azk8s.cn/google-containers/kube-apiserver | gcr.azk8s.cn/google-containers/hyperkube | `kube-apiserver`
+gcr.azk8s.cn/google-containers/kube-controller-manager | gcr.azk8s.cn/google-containers/hyperkube | `kube-controller-manager`
+gcr.azk8s.cn/google-containers/kube-scheduler | gcr.azk8s.cn/google-containers/hyperkube | `kube-scheduler`
+gcr.azk8s.cn/google-containers/kube-proxy | gcr.azk8s.cn/google-containers/hyperkube | `kube-proxy`
+目前没找到 | gcr.azk8s.cn/google-containers/hyperkube | `kubelet`
 
 # Reference
 

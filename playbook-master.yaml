@@ -33,7 +33,7 @@
         --net=host \
         --volumes-from=system-volumes \
         --entrypoint="kube-apiserver" \
-        gcr.azk8s.cn/google-containers/kube-apiserver:v1.14.0 \
+        gcr.azk8s.cn/google-containers/hyperkube:{{version}} \
             --etcd-servers=http://127.0.0.1:2379 \
             --anonymous-auth=false \
             --advertise-address=${V_HOST} \
@@ -47,7 +47,7 @@
         --net=host \
         --volumes-from=system-volumes \
         --entrypoint="kube-controller-manager" \
-        gcr.azk8s.cn/google-containers/kube-controller-manager:v1.14.0 \
+        gcr.azk8s.cn/google-containers/hyperkube:{{version}} \
         --master=127.0.0.1:8080
 
   - name: "kube-scheduler setup"
@@ -58,7 +58,7 @@
         --net=host \
         --volumes-from=system-volumes \
         --entrypoint="kube-scheduler" \
-        gcr.azk8s.cn/google-containers/kube-scheduler:v1.14.0 \
+        gcr.azk8s.cn/google-containers/hyperkube:{{version}} \
         --master=127.0.0.1:8080
 
   

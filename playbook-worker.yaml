@@ -48,7 +48,7 @@
         --net=host --privileged \
         --volumes-from=system-volumes \
         --entrypoint="kube-proxy" \
-        gcr.azk8s.cn/google-containers/kube-proxy:v1.14.0 \
+        gcr.azk8s.cn/google-containers/hyperkube:{{version}} \
         --kubeconfig=/etc/docker/kubernetes/KUBECONFIG \
         --proxy-mode=iptables \
         --bind-address=${V_HOST} \
@@ -64,7 +64,10 @@
       #   --net=host --privileged \
       #   --volumes-from=system-volumes \
       #   --entrypoint="kubelet" \
-      #   gcr.azk8s.cn/google-containers/hyperkube:v1.14.0 \
+      #   gcr.azk8s.cn/google-containers/hyperkube:{{version}} \
       #   --kubeconfig=/etc/docker/kubernetes/KUBECONFIG \
       #   --node-ip=${V_HOST} \
+      #   --allow-privileged=true \
+      #   --container-runtime=docker \
+      #   --containerized \
       #   --pod-cidr=10.0.0.1/16
